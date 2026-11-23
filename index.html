@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08111f">
+<link rel="manifest" href="manifest.webmanifest">
+<title>CHAT — Personal Assistant</title>
+<style>
+:root{color-scheme:dark;--bg:#07101d;--panel:#101d30;--panel2:#14243a;--line:#263b55;--text:#eef5ff;--muted:#9db0c8;--accent:#69b7ff;--good:#73d6b0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#132b49 0,#07101d 55%);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+header{padding:22px 18px 12px;max-width:760px;margin:auto;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}.orb{width:44px;height:44px;border-radius:50%;background:linear-gradient(145deg,#8ad2ff,#2469a8);box-shadow:0 0 28px #398ed866;display:grid;place-items:center;color:#061323;font-weight:900}
+h1{font-size:23px;margin:0;letter-spacing:2px}header small{color:var(--muted)}
+main{max-width:760px;margin:auto;padding:8px 14px 40px}.hero{padding:20px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#142b46dd,#0c1829ee);text-align:center}
+.hero p{color:var(--muted);margin:6px 0 16px}.status{font-size:12px;color:var(--good);letter-spacing:.5px}
+button{border:0;border-radius:14px;padding:12px 15px;background:var(--accent);color:#061323;font-weight:750;font-size:14px}
+button.secondary{background:#1a2b42;color:var(--text);border:1px solid var(--line)}button:disabled{opacity:.45}
+.mic{width:66px;height:66px;border-radius:50%;font-size:25px;display:inline-grid;place-items:center;margin:4px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.card{background:#0e1b2d;border:1px solid var(--line);border-radius:18px;padding:15px;min-width:0}
+.card h2{font-size:15px;margin:0 0 10px}.muted{color:var(--muted);font-size:13px}
+input,textarea{width:100%;border:1px solid var(--line);background:#081526;color:var(--text);border-radius:12px;padding:12px;font:inherit;margin:5px 0 9px}
+textarea{min-height:72px;resize:vertical}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.chatbox{height:250px;overflow:auto;display:flex;flex-direction:column;gap:9px;padding:4px}
+.msg{max-width:90%;padding:10px 12px;border-radius:14px;background:#172941;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.msg.me{align-self:flex-end;background:#174a72}.msg.bot{align-self:flex-start}
+.item{padding:9px 0;border-bottom:1px solid #20334a;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.item:last-child{border:0}.tiny{font-size:11px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
+@media(max-width:430px){.grid{grid-template-columns:1fr}.hero{padding:16px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="orb">C</div><div><h1>CHAT</h1><small>PERSONAL ASSISTANT · PROFESSIONAL MODE</small></div></div><span class="status">● LOCAL MODE</span></header>
+<main>
+<section class="hero">
+  <div class="status">SYSTEM READY</div>
+  <h2 style="font-size:22px;margin:8px 0">Good day. I'm CHAT.</h2>
+  <p>Your personal assistant. I can save notes, keep a simple memory, and help organise reminders on this device.</p>
+  <button class="mic" id="micBtn" aria-label="Speak">🎙</button>
+  <div class="muted" id="voiceStatus">Tap the microphone to speak, or type below.</div>
+</section>
+<section class="card" style="margin-top:12px">
+  <h2>Conversation</h2><div class="chatbox" id="chat"></div>
+  <form id="chatForm"><input id="message" autocomplete="off" placeholder="Message CHAT…" aria-label="Message CHAT"><div class="actions"><button type="submit">Send</button><button type="button" class="secondary" id="speakToggle">Voice: ON</button></div></form>
+</section>
+<div class="grid">
+<section class="card"><h2>Personal memory</h2><p class="muted">Only information you choose to save stays on this device.</p><textarea id="memoryInput" placeholder="Example: I prefer short, clear explanations."></textarea><button id="saveMemory">Save memory</button><div id="memoryList" style="margin-top:8px"></div></section>
+<section class="card"><h2>Reminders</h2><input id="reminderText" placeholder="What should I remind you about?"><input id="reminderTime" type="datetime-local"><button id="addReminder">Add reminder</button><div class="tiny" style="margin-top:8px">Reminders are checked while CHAT is open. Browser notification permission may be requested.</div><div id="reminderList" style="margin-top:8px"></div></section>
+</div>
+<section class="card"><h2>What I can do in this first version</h2><div class="muted">Try: “Remember that I prefer simple English”, “Show my memory”, “Add a reminder to study at 7 pm” (use the reminder form for an exact time), or “What can you do?”</div></section>
+</main>
+<footer>CHAT v0.1 · Your data stays in this browser on this device. This first version works locally and is not yet connected to a full AI model.</footer>
+<script>
+const $=id=>document.getElementById(id);
+const read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+let memories=read('chat_memories'), reminders=read('chat_reminders'), voiceOn=true;
+function addMsg(text,who='bot'){const el=document.createElement('div');el.className='msg '+who;el.textContent=text;$('chat').appendChild(el);$('chat').scrollTop=$('chat').scrollHeight}
+function speak(text){if(!voiceOn||!('speechSynthesis'in window))return; speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-GH';u.rate=1; speechSynthesis.speak(u)}
+function reply(text){addMsg(text);speak(text)}
+function renderMemory(){ $('memoryList').innerHTML='';memories.forEach((m,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=m;const b=document.createElement('button');b.className='secondary';b.textContent='Delete';b.onclick=()=>{memories.splice(i,1);write('chat_memories',memories);renderMemory()};d.append(s,b);$('memoryList').append(d)})}
+function renderReminders(){ $('reminderList').innerHTML='';reminders.forEach((r,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=r.text+' · '+new Date(r.time).toLocaleString();const b=document.createElement('button');b.className='secondary';b.textContent='Delete';b.onclick=()=>{reminders.splice(i,1);write('chat_reminders',reminders);renderReminders()};d.append(s,b);$('reminderList').append(d)})}
+function handle(text){const t=text.trim();if(!t)return;addMsg(t,'me');const low=t.toLowerCase();
+ if(low.startsWith('remember that ')){const m=t.slice(14).trim();memories.push(m);write('chat_memories',memories);renderMemory();reply('I have saved that on this device: '+m);return}
+ if(low.includes('show my memory')||low==='memory'){reply(memories.length?'Here is what I have saved:\n• '+memories.join('\n• '):'Your personal memory is empty. You can save something in the Personal memory section.');return}
+ if(low.includes('what can you do')){reply('In this first version, I can save personal notes, show your saved memory, speak replies aloud, and keep reminders while this app is open. I am not connected to a full AI model yet.');return}
+ if(low.includes('hello')||low==='hi'||low.startsWith('good morning')||low.startsWith('good afternoon')){reply('Hello. I'm CHAT. How may I assist you?');return}
+ if(low.includes('time')){reply('The current time on your device is '+new Date().toLocaleTimeString()+'.');return}
+ if(low.includes('date')){reply('Today on your device is '+new Date().toLocaleDateString()+'.');return}
+ reply('I received your message. My local version is not connected to a full AI brain yet, so I cannot answer general questions reliably. I can still save memories, speak, and manage reminders.');}
+$('chatForm').addEventListener('submit',e=>{e.preventDefault();handle($('message').value);$('message').value=''});
+$('saveMemory').onclick=()=>{const v=$('memoryInput').value.trim();if(!v)return;memories.push(v);write('chat_memories',memories);$('memoryInput').value='';renderMemory();reply('Saved to your personal memory on this device.')};
+$('addReminder').onclick=async()=>{const text=$('reminderText').value.trim(),time=$('reminderTime').value;if(!text||!time){reply('Please enter both a reminder and a date and time.');return}const when=new Date(time).getTime();if(when<=Date.now()){reply('Please choose a future time.');return}reminders.push({text,time:when,done:false});write('chat_reminders',reminders);renderReminders();$('reminderText').value='';$('reminderTime').value='';if('Notification'in window&&Notification.permission==='default'){try{await Notification.requestPermission()}catch{}}reply('Reminder saved. Keep CHAT open for it to be checked in this version.')};
+$('speakToggle').onclick=()=>{voiceOn=!voiceOn;$('speakToggle').textContent='Voice: '+(voiceOn?'ON':'OFF');if(!voiceOn&&'speechSynthesis'in window)speechSynthesis.cancel()};
+$('micBtn').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('voiceStatus').textContent='Speech recognition is not supported in this browser. You can type instead.';return}const rec=new SR();rec.lang='en-GH';rec.interimResults=false;rec.onstart=()=>$('voiceStatus').textContent='Listening…';rec.onerror=e=>$('voiceStatus').textContent='Microphone issue: '+e.error;rec.onend=()=>$('voiceStatus').textContent='Tap the microphone to speak, or type below.';rec.onresult=e=>handle(e.results[0][0].transcript);rec.start()};
+setInterval(()=>{const now=Date.now();reminders.forEach(r=>{if(!r.done&&r.time<=now){r.done=true;const msg='Reminder: '+r.text;reply(msg);if('Notification'in window&&Notification.permission==='granted')new Notification('CHAT reminder',{body:r.text})}});write('chat_reminders',reminders);renderReminders()},15000);
+renderMemory();renderReminders();addMsg('System online. I am CHAT, running in local mode. I can save memories and organise reminders. I am not yet connected to a full AI model.');
+if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
