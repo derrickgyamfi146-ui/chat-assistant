@@ -35,6 +35,14 @@ async function loadLocalAI() {
   setProgress(0);
 
   try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const estimate = await navigator.storage.estimate();
+      const available = Number(estimate.quota || 0) - Number(estimate.usage || 0);
+      if (available > 0 && available < 250 * 1024 * 1024) {
+        throw new Error("Not enough estimated browser storage for the model and runtime");
+      }
+      if (navigator.storage.persist) await navigator.storage.persist().catch(() => false);
+    }
     const { pipeline, env } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2");
     // Use the browser's model cache so later sessions can reuse downloaded files.
     if ("useBrowserCache" in env) env.useBrowserCache = true;
