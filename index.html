@@ -52,7 +52,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 <section class="card" style="margin-top:12px"><h2>System check</h2><p class="muted">Check which features this browser supports. This does not send your data anywhere.</p><div class="actions"><button type="button" id="runChecks">Run system check</button><button type="button" class="secondary" id="testVoice">Test voice output</button><button type="button" class="secondary" id="testNotification">Test notification</button><button type="button" class="secondary" id="testReminder">Test reminder (10 sec)</button></div><div id="checkResults" class="muted" style="margin-top:10px" aria-live="polite">Checks have not been run yet.</div></section>
 <section class="card"><h2>What I can do in this first version</h2><div class="muted">Try: “Remember that I prefer simple English”, “Show my memory”, “Clear completed reminders”, or “What can you do?” Use the Reminders form to set an exact date and time. Try “calculate 25 * 4” too.</div></section>
 </main>
-<footer>CHAT v0.6 · Your data stays in this browser on this device. This first version works locally and is not yet connected to a full AI model.</footer>
+<footer>CHAT v0.7 · Your data stays in this browser on this device. This first version works locally and is not yet connected to a full AI model.</footer>
 <script>
 const $=id=>document.getElementById(id);
 const read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
