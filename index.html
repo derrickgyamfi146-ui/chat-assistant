@@ -42,7 +42,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
   <div class="muted" id="voiceStatus">Tap the microphone to speak, or type below.</div>
 </section>
 <section class="card" style="margin-top:12px">
-  <h2>Conversation</h2><div class="chatbox" id="chat"></div>
+  <h2>Conversation</h2><input id="chatSearch" type="search" placeholder="Search your conversation…" aria-label="Search conversation"><div class="chatbox" id="chat"></div>
   <form id="chatForm"><input id="message" autocomplete="off" placeholder="Message CHAT…" aria-label="Message CHAT"><div class="actions"><button type="submit">Send</button><button type="button" class="secondary" id="speakToggle">Voice: ON</button><button type="button" class="secondary" id="clearChat">Clear conversation</button></div></form>
 </section>
 <div class="grid">
@@ -57,7 +57,7 @@ const $=id=>document.getElementById(id);
 const read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 let memories=read('chat_memories'), reminders=read('chat_reminders'), messages=read('chat_messages'), voiceOn=true;
-function renderChat(){ $('chat').innerHTML=''; messages.forEach(m=>{const el=document.createElement('div');el.className='msg '+m.who;el.textContent=m.text;$('chat').appendChild(el)});$('chat').scrollTop=$('chat').scrollHeight }
+function renderChat(){const q=($('chatSearch')?.value||'').trim().toLowerCase();$('chat').innerHTML='';const shown=messages.filter(m=>!q||String(m.text).toLowerCase().includes(q));if(!shown.length){$('chat').textContent=q?'No matching messages found.':'No messages yet.';return}shown.forEach(m=>{const el=document.createElement('div');el.className='msg '+m.who;el.textContent=m.text;$('chat').appendChild(el)});$('chat').scrollTop=$('chat').scrollHeight}
 function addMsg(text,who='bot'){messages.push({text,who,time:Date.now()});if(messages.length>300)messages=messages.slice(-300);write('chat_messages',messages);const el=document.createElement('div');el.className='msg '+who;el.textContent=text;$('chat').appendChild(el);$('chat').scrollTop=$('chat').scrollHeight}
 function speak(text){if(!voiceOn||!('speechSynthesis'in window))return; speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-GH';u.rate=1; speechSynthesis.speak(u)}
 function reply(text){addMsg(text);speak(text)}
@@ -95,6 +95,7 @@ function handle(text){
  if(low.includes('how are you')){reply('I am operating normally and ready to assist. What would you like to do?');return}
  reply('I have received your message. I can currently handle saved memories, reminders, date and time, arithmetic calculations, and basic assistant commands. For open-ended questions, I still need an AI model connection.');}
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();handle($('message').value);$('message').value=''});
+$('chatSearch').addEventListener('input',renderChat);
 $('clearChat').onclick=()=>{if(confirm('Clear only the conversation history? Your saved memories and reminders will remain.')){messages=[];write('chat_messages',messages);renderChat();}};
 $('backupData').onclick=()=>{
  const data={app:'CHAT',version:1,exportedAt:new Date().toISOString(),memories,reminders,messages};
