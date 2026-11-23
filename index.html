@@ -43,7 +43,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 </section>
 <section class="card" style="margin-top:12px">
   <h2>Conversation</h2><div class="chatbox" id="chat"></div>
-  <form id="chatForm"><input id="message" autocomplete="off" placeholder="Message CHAT…" aria-label="Message CHAT"><div class="actions"><button type="submit">Send</button><button type="button" class="secondary" id="speakToggle">Voice: ON</button></div></form>
+  <form id="chatForm"><input id="message" autocomplete="off" placeholder="Message CHAT…" aria-label="Message CHAT"><div class="actions"><button type="submit">Send</button><button type="button" class="secondary" id="speakToggle">Voice: ON</button><button type="button" class="secondary" id="clearChat">Clear conversation</button></div></form>
 </section>
 <div class="grid">
 <section class="card"><h2>Personal memory</h2><p class="muted">Only information you choose to save stays on this device.</p><textarea id="memoryInput" placeholder="Example: I prefer short, clear explanations."></textarea><div class="actions"><button id="saveMemory">Save memory</button><button type="button" class="secondary" id="backupData">Back up data</button><button type="button" class="secondary" id="restoreData">Restore backup</button><input id="backupFile" type="file" accept="application/json,.json" hidden></div><div class="tiny">Back up your conversations, memories and reminders to a file you control.</div><div id="memoryList" style="margin-top:8px"></div></section>
@@ -90,6 +90,7 @@ function handle(text){
  if(low.includes('how are you')){reply('I am operating normally and ready to assist. What would you like to do?');return}
  reply('I have received your message. I can currently handle saved memories, reminders, date and time, arithmetic calculations, and basic assistant commands. For open-ended questions, I still need an AI model connection.');}
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();handle($('message').value);$('message').value=''});
+$('clearChat').onclick=()=>{if(confirm('Clear only the conversation history? Your saved memories and reminders will remain.')){messages=[];write('chat_messages',messages);renderChat();}};
 $('backupData').onclick=()=>{
  const data={app:'CHAT',version:1,exportedAt:new Date().toISOString(),memories,reminders,messages};
  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
