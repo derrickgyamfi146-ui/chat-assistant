@@ -1,4 +1,4 @@
-const CACHE = "chat-v18";
+const CACHE = "chat-v19";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./ai.js", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
