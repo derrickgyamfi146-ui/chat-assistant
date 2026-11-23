@@ -64,7 +64,7 @@ function reply(text){addMsg(text);speak(text)}
 function renderMemory(){ $('memoryList').innerHTML='';memories.forEach((m,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=m;const b=document.createElement('button');b.className='secondary';b.textContent='Delete';b.onclick=()=>{memories.splice(i,1);write('chat_memories',memories);renderMemory()};d.append(s,b);$('memoryList').append(d)})}
 function renderReminders(){ $('reminderList').innerHTML='';reminders.forEach((r,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=r.text+' · '+new Date(r.time).toLocaleString();const b=document.createElement('button');b.className='secondary';b.textContent='Delete';b.onclick=()=>{reminders.splice(i,1);write('chat_reminders',reminders);renderReminders()};d.append(s,b);$('reminderList').append(d)})}
 function calculateExpression(source){
- const tokens=source.replace(/,/g,'').match(/\d+(?:\.\d+)?|[()+\-*/]/g);
+  const tokens=source.replace(/,/g,'').match(/\d+(?:\.\d+)?|[()+\-*\/]/g);
  if(!tokens||tokens.join('')!==source.replace(/[\s,]/g,''))throw new Error('Invalid expression');
  let i=0;
  function factor(){const t=tokens[i++];if(t==='+')return factor();if(t==='-')return -factor();if(t==='('){const v=expression();if(tokens[i++]!==')')throw new Error('Missing bracket');return v}if(t===undefined||!/^\d+(?:\.\d+)?$/.test(t))throw new Error('Expected number');return Number(t)}
@@ -83,7 +83,7 @@ function handle(text){
  if(low.includes('who are you')||low.includes('your name')){reply('I am CHAT, your personal assistant. My style is professional, and I currently run locally on this device.');return}
  if(low.includes('hello')||low==='hi'||low.startsWith('good morning')||low.startsWith('good afternoon')||low.startsWith('good evening')){reply('Hello. I am CHAT. How may I assist you?');return}
  const calcMatch=t.match(/^(?:calculate|compute|what is)\s+(.+?)[?。]?$/i);
- if(calcMatch&&/[0-9][0-9\s.,()+*/-]*$/.test(calcMatch[1])){try{reply('The answer is '+calculateExpression(calcMatch[1].trim())+'.')}catch{reply('I could not calculate that. Please use numbers and +, -, ×, ÷, or brackets.')}return}
+ if(calcMatch&&/[0-9][0-9\s.,()+*\/-]*$/.test(calcMatch[1])){try{reply('The answer is '+calculateExpression(calcMatch[1].trim())+'.')}catch{reply('I could not calculate that. Please use numbers and +, -, ×, ÷, or brackets.')}return}
  if(low.includes('time')){reply('The current time on your device is '+new Date().toLocaleTimeString()+'.');return}
  if(low.includes('date')||low.includes('today')){reply('Today is '+new Date().toLocaleDateString()+'.');return}
  if(low.includes('thank')){reply('You are welcome. Is there anything else I can help you organise?');return}
