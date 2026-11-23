@@ -56,8 +56,9 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 const $=id=>document.getElementById(id);
 const read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-let memories=read('chat_memories'), reminders=read('chat_reminders'), voiceOn=true;
-function addMsg(text,who='bot'){const el=document.createElement('div');el.className='msg '+who;el.textContent=text;$('chat').appendChild(el);$('chat').scrollTop=$('chat').scrollHeight}
+let memories=read('chat_memories'), reminders=read('chat_reminders'), messages=read('chat_messages'), voiceOn=true;
+function renderChat(){ $('chat').innerHTML=''; messages.forEach(m=>{const el=document.createElement('div');el.className='msg '+m.who;el.textContent=m.text;$('chat').appendChild(el)});$('chat').scrollTop=$('chat').scrollHeight }
+function addMsg(text,who='bot'){messages.push({text,who,time:Date.now()});if(messages.length>300)messages=messages.slice(-300);write('chat_messages',messages);const el=document.createElement('div');el.className='msg '+who;el.textContent=text;$('chat').appendChild(el);$('chat').scrollTop=$('chat').scrollHeight}
 function speak(text){if(!voiceOn||!('speechSynthesis'in window))return; speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-GH';u.rate=1; speechSynthesis.speak(u)}
 function reply(text){addMsg(text);speak(text)}
 function renderMemory(){ $('memoryList').innerHTML='';memories.forEach((m,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=m;const b=document.createElement('button');b.className='secondary';b.textContent='Delete';b.onclick=()=>{memories.splice(i,1);write('chat_memories',memories);renderMemory()};d.append(s,b);$('memoryList').append(d)})}
@@ -76,7 +77,7 @@ $('addReminder').onclick=async()=>{const text=$('reminderText').value.trim(),tim
 $('speakToggle').onclick=()=>{voiceOn=!voiceOn;$('speakToggle').textContent='Voice: '+(voiceOn?'ON':'OFF');if(!voiceOn&&'speechSynthesis'in window)speechSynthesis.cancel()};
 $('micBtn').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('voiceStatus').textContent='Speech recognition is not supported in this browser. You can type instead.';return}const rec=new SR();rec.lang='en-GH';rec.interimResults=false;rec.onstart=()=>$('voiceStatus').textContent='Listening…';rec.onerror=e=>$('voiceStatus').textContent='Microphone issue: '+e.error;rec.onend=()=>$('voiceStatus').textContent='Tap the microphone to speak, or type below.';rec.onresult=e=>handle(e.results[0][0].transcript);rec.start()};
 setInterval(()=>{const now=Date.now();reminders.forEach(r=>{if(!r.done&&r.time<=now){r.done=true;const msg='Reminder: '+r.text;reply(msg);if('Notification'in window&&Notification.permission==='granted')new Notification('CHAT reminder',{body:r.text})}});write('chat_reminders',reminders);renderReminders()},15000);
-renderMemory();renderReminders();addMsg('System online. I am CHAT, running in local mode. I can save memories and organise reminders. I am not yet connected to a full AI model.');
+renderMemory();renderReminders();if(messages.length){renderChat()}else{addMsg('System online. I am CHAT, running in local mode. I can save memories and organise reminders. I am not yet connected to a full AI model.')}
 if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body></html>
