@@ -64,10 +64,10 @@ function reply(text){addMsg(text);speak(text)}
 function renderMemory(){ $('memoryList').innerHTML='';memories.forEach((m,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=m;const b=document.createElement('button');b.className='secondary';b.textContent='Delete';b.onclick=()=>{memories.splice(i,1);write('chat_memories',memories);renderMemory()};d.append(s,b);$('memoryList').append(d)})}
 function renderReminders(){ $('reminderList').innerHTML='';reminders.forEach((r,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=r.text+' · '+new Date(r.time).toLocaleString();const b=document.createElement('button');b.className='secondary';b.textContent='Delete';b.onclick=()=>{reminders.splice(i,1);write('chat_reminders',reminders);renderReminders()};d.append(s,b);$('reminderList').append(d)})}
 function calculateExpression(source){
- const tokens=source.replace(/,/g,'').match(/\\d+(?:\\.\\d+)?|[()+\\-*/]/g);
- if(!tokens||tokens.join('')!==source.replace(/[\\s,]/g,''))throw new Error('Invalid expression');
+ const tokens=source.replace(/,/g,'').match(/\d+(?:\.\d+)?|[()+\-*/]/g);
+ if(!tokens||tokens.join('')!==source.replace(/[\s,]/g,''))throw new Error('Invalid expression');
  let i=0;
- function factor(){const t=tokens[i++];if(t==='+')return factor();if(t==='-')return -factor();if(t==='('){const v=expression();if(tokens[i++]!==')')throw new Error('Missing bracket');return v}if(t===undefined||!/^\\d+(?:\\.\\d+)?$/.test(t))throw new Error('Expected number');return Number(t)}
+ function factor(){const t=tokens[i++];if(t==='+')return factor();if(t==='-')return -factor();if(t==='('){const v=expression();if(tokens[i++]!==')')throw new Error('Missing bracket');return v}if(t===undefined||!/^\d+(?:\.\d+)?$/.test(t))throw new Error('Expected number');return Number(t)}
  function term(){let v=factor();while(tokens[i]==='*'||tokens[i]==='/'){const op=tokens[i++],n=factor();if(op==='/'&&n===0)throw new Error('Division by zero');v=op==='*'?v*n:v/n}return v}
  function expression(){let v=term();while(tokens[i]==='+'||tokens[i]==='-'){const op=tokens[i++],n=term();v=op==='+'?v+n:v-n}return v}
  const result=expression();if(i!==tokens.length||!Number.isFinite(result))throw new Error('Invalid calculation');return result;
