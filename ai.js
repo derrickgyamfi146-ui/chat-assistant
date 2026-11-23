@@ -81,14 +81,14 @@ async function loadLocalAI() {
     window.chatAIRespond = async (question) => {
       if (!generator) throw new Error("Model is not loaded");
       const messages = [
-        { role: "system", content: "You are CHAT, a helpful, professional personal assistant. Give clear, accurate, age-appropriate answers in simple English. If you are unsure, say so. Keep answers reasonably concise." },
+        { role: "system", content: "You are CHAT, a careful and honest personal assistant. Answer only the question asked. Use simple, clear English and give a direct answer. Do not invent facts, names, dates, sources, calculations, or instructions. If you do not know or cannot understand the question, say clearly that you are not sure and ask one short clarifying question. For factual questions, do not guess. Avoid repeating the same point, sentence, or number. Keep the answer short and useful. Use age-appropriate language." },
         { role: "user", content: String(question).slice(0, 1800) }
       ];
       const output = await generator(messages, {
-        max_new_tokens: 120,
-        do_sample: true,
-        temperature: 0.7,
-        top_p: 0.9
+        max_new_tokens: 100,
+        do_sample: false,
+        repetition_penalty: 1.15,
+        no_repeat_ngram_size: 3
       });
       const generated = output && output[0] && output[0].generated_text;
       let answer = "";
