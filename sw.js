@@ -1,5 +1,5 @@
-const CACHE = "chat-v15";
-const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CACHE = "chat-v16";
+const FILES = ["./", "./index.html", "./manifest.webmanifest", "./ai.js", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
   event.waitUntil(
@@ -19,6 +19,20 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+
+  // Cache the optional AI runtime after its first successful download.
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin && requestUrl.hostname === "cdn.jsdelivr.net") {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match(event.request);
+      if (cached) return cached;
+      const response = await fetch(event.request);
+      if (response.ok) await cache.put(event.request, response.clone());
+      return response;
+    })().catch(() => caches.match(event.request)));
+    return;
+  }
 
   if (event.request.mode === "navigate") {
     event.respondWith(
