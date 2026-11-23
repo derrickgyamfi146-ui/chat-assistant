@@ -153,5 +153,5 @@ setInterval(()=>{const now=Date.now();reminders.forEach(r=>{if(!r.done&&r.time<=
 renderMemory();renderReminders();if(messages.length){renderChat()}else{addMsg('System online. I am CHAT, running in local mode. I can save memories and organise reminders. I am not yet connected to a full AI model.')}
 if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
-<script type="module" src="./ai.js"></script>
+<script type="module" src="./ai.js" onerror="document.getElementById('aiStatus').textContent='The AI engine could not load. Connect to the internet and refresh CHAT.'"></script>
 </body></html>
