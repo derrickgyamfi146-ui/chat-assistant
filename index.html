@@ -35,7 +35,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 <header><div class="brand"><div class="orb">C</div><div><h1>CHAT</h1><small>PERSONAL ASSISTANT · PROFESSIONAL MODE</small></div></div><span class="status">● LOCAL MODE</span></header>
 <main>
 <section class="hero">
-  <div class="status">SYSTEM READY</div>
+  <div class="status">SYSTEM READY · OFFLINE KNOWLEDGE BRAIN</div>
   <h2 style="font-size:22px;margin:8px 0">Good day. I'm CHAT.</h2>
   <p>Your personal assistant. I can save notes, keep a simple memory, and help organise reminders on this device.</p>
   <button class="mic" id="micBtn" aria-label="Speak">🎙</button>
@@ -52,7 +52,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 <section class="card" style="margin-top:12px"><h2>System check</h2><p class="muted">Check which features this browser supports. This does not send your data anywhere.</p><div class="actions"><button type="button" id="runChecks">Run system check</button><button type="button" class="secondary" id="testVoice">Test voice output</button><button type="button" class="secondary" id="testNotification">Test notification</button><button type="button" class="secondary" id="testReminder">Test reminder (10 sec)</button></div><div id="checkResults" class="muted" style="margin-top:10px" aria-live="polite">Checks have not been run yet.</div></section>
 <section class="card"><h2>What I can do in this first version</h2><div class="muted">Try: “Remember that I prefer simple English”, “Show my memory”, “Clear completed reminders”, or “What can you do?” Use the Reminders form to set an exact date and time. Try “calculate 25 * 4” too.</div></section>
 </main>
-<footer>CHAT v0.7 · Your data stays in this browser on this device. This first version works locally and is not yet connected to a full AI model.</footer>
+<footer>CHAT v0.8 · Your data stays in this browser on this device. Includes a small built-in offline knowledge library; not a full generative AI model.</footer>
 <script>
 const $=id=>document.getElementById(id);
 const read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
@@ -84,7 +84,31 @@ function handle(text){
  if(low==='clear memory'||low==='delete all memories'){if(confirm('Delete all saved memories? This cannot be undone unless you have a backup.')){memories=[];write('chat_memories',memories);renderMemory();reply('All saved memories have been cleared.')}else reply('No memories were deleted.');return}
  if(low==='clear completed reminders'){const before=reminders.length;reminders=reminders.filter(r=>!r.done);write('chat_reminders',reminders);renderReminders();reply((before-reminders.length)+' completed reminder(s) cleared.');return}
  if(low.includes('show my reminders')||low.includes('list reminders')){reply(reminders.length?'Your reminders:\n• '+reminders.map(r=>r.text+' — '+new Date(r.time).toLocaleString()+(r.done?' (done)':'')).join('\n• '):'You have no saved reminders. Add one in the Reminders section.');return}
- if(low.includes('what can you do')||low==='help'||low==='commands'){reply('I can save and recall personal memories, clear memories with confirmation, show or clear reminders, clear completed reminders, calculate arithmetic, tell the date and time, speak replies, and take voice input. Use the memory and reminder panels for saving details and setting exact reminder times. I work offline; I am not connected to a full AI model yet.');return}
+ const offlineKnowledge=[
+  {keys:['photosynthesis','plants make food'],answer:'Photosynthesis is the process by which green plants use sunlight, water and carbon dioxide to make glucose (food). Oxygen is released. Chlorophyll in the leaves absorbs the light.'},
+  {keys:['gravity','gravitational force'],answer:'Gravity is the force of attraction between objects with mass. On Earth, gravity pulls objects towards the centre of the planet and gives them weight.'},
+  {keys:['inertia','newton first law','first law of motion'],answer:'Inertia is the tendency of an object to resist a change in its state of rest or uniform straight-line motion. Newton’s First Law says an object stays at rest or keeps moving uniformly in a straight line unless acted on by a resultant external force.'},
+  {keys:['force','define force'],answer:'A force is a push or pull that can change an object’s motion, direction or shape. Its SI unit is the newton (N).'},
+  {keys:['energy','forms of energy'],answer:'Energy is the ability to do work. Common forms include kinetic, potential, chemical, electrical, thermal, light and sound energy. Energy can be transferred or changed from one form to another.'},
+  {keys:['atom','structure of an atom'],answer:'An atom has a small central nucleus containing protons and neutrons. Electrons occupy regions around the nucleus. Protons are positive, electrons are negative, and neutrons have no charge.'},
+  {keys:['electric current','current'],answer:'Electric current is the rate of flow of electric charge. Its SI unit is the ampere (A). In a simple circuit, current flows when there is a complete conducting path.'},
+  {keys:['water cycle','hydrological cycle'],answer:'The water cycle is the continuous movement of water. The main stages are evaporation, condensation, precipitation and collection. The Sun provides energy for much of this cycle.'},
+  {keys:['density'],answer:'Density is mass per unit volume. Formula: density = mass ÷ volume. Its common SI unit is kg/m³.'},
+  {keys:['pressure'],answer:'Pressure is force acting per unit area. Formula: pressure = force ÷ area. Its SI unit is the pascal (Pa).'},
+  {keys:['speed','velocity'],answer:'Speed is distance travelled per unit time and has magnitude only. Velocity is displacement per unit time and includes direction. Average speed = total distance ÷ total time.'},
+  {keys:['acid','base','alkali'],answer:'An acid produces hydrogen ions (H⁺) in aqueous solution. An alkali is a soluble base that produces hydroxide ions (OH⁻) in water. Acids turn blue litmus red; alkalis turn red litmus blue.'},
+  {keys:['states of matter','solid liquid gas'],answer:'The three common states of matter are solid, liquid and gas. Solids have a fixed shape and volume; liquids have a fixed volume but take the shape of their container; gases have neither a fixed shape nor a fixed volume.'},
+  {keys:['democracy'],answer:'Democracy is a system of government in which people have a say in how they are governed, usually by choosing representatives through elections.'},
+  {keys:['ghana independence','independence of ghana'],answer:'Ghana became independent from British colonial rule on 6 March 1957. It was the first sub-Saharan African country to gain independence from colonial rule.'},
+  {keys:['computer','what is a computer'],answer:'A computer is an electronic device that accepts data, processes it according to instructions, stores it and produces information.'}
+ ];
+ function offlineAnswer(question){
+  const q=question.toLowerCase().replace(/[^a-z0-9\\s]/g,' ').replace(/\\s+/g,' ').trim();
+  let best=null,bestScore=0;
+  for(const item of offlineKnowledge){let score=0;for(const key of item.keys){const k=key.toLowerCase();if(q===k)score+=5;else if(q.includes(k))score+=3;else if(k.split(' ').length>1&&k.split(' ').every(w=>q.includes(w)))score+=2;}if(score>bestScore){best=item;bestScore=score;}}
+  return best&&bestScore>=2?best.answer:null;
+ }
+ if(low.includes('what can you do')||low==='help'||low==='commands'){reply('I can answer some built-in general-knowledge and school questions offline, save and recall personal memories, manage reminders, calculate arithmetic, tell the date and time, speak replies, and take voice input. I am not yet a full generative AI model.');return}
  if(low.includes('who are you')||low.includes('your name')){reply('I am CHAT, your personal assistant. My style is professional, and I currently run locally on this device.');return}
  if(low.includes('hello')||low==='hi'||low.startsWith('good morning')||low.startsWith('good afternoon')||low.startsWith('good evening')){reply('Hello. I am CHAT. How may I assist you?');return}
  const calcMatch=t.match(/^(?:(?:calculate|compute|what is)\s+)?([0-9][0-9\s.,()+*\/×xX÷−-]*)[?。]?$/i);
@@ -94,7 +118,7 @@ function handle(text){
  if(low==='stop speaking'||low==='be quiet'){if('speechSynthesis'in window)speechSynthesis.cancel();addMsg('Voice playback stopped.');return}
  if(low.includes('thank')){reply('You are welcome. Is there anything else I can help you organise?');return}
  if(low.includes('how are you')){reply('I am operating normally and ready to assist. What would you like to do?');return}
- reply('I have received your message. I can currently handle saved memories, reminders, date and time, arithmetic calculations, and basic assistant commands. For open-ended questions, I still need an AI model connection.');}
+ const knowledgeReply=offlineAnswer(t);if(knowledgeReply){reply(knowledgeReply);return}\n reply('I am in offline mode. I can answer some built-in questions about science, computers, Ghana and general knowledge, as well as manage your memories, reminders and calculations. I do not know every answer yet. Try asking about gravity, photosynthesis, atoms, density or the water cycle.');}
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();handle($('message').value);$('message').value=''});
 $('chatSearch').addEventListener('input',renderChat);
 $('runChecks').onclick=()=>{const results=[];const check=(name,ok,detail='')=>results.push((ok?'✓ ':'✗ ')+name+(detail?' — '+detail:''));let storageOK=false;try{const key='chat_diag_test';localStorage.setItem(key,'ok');storageOK=localStorage.getItem(key)==='ok';localStorage.removeItem(key)}catch{}check('Local storage',storageOK,storageOK?'available':'unavailable or blocked');check('Voice input',!!(window.SpeechRecognition||window.webkitSpeechRecognition),(window.SpeechRecognition||window.webkitSpeechRecognition)?'browser API found; microphone still needs a live test':'not supported in this browser');check('Voice output',('speechSynthesis'in window),'speech playback API');check('Notifications',('Notification'in window),'permission: '+(('Notification'in window)?Notification.permission:'unsupported'));check('Service worker',('serviceWorker'in navigator),'supported: '+('serviceWorker'in navigator));let backupOK=false;try{const test={app:'CHAT',version:1,memories,reminders,messages};const parsed=JSON.parse(JSON.stringify(test));backupOK=parsed.app==='CHAT'&&Array.isArray(parsed.memories)&&Array.isArray(parsed.reminders)&&Array.isArray(parsed.messages)}catch{}check('Backup data format',backupOK,'data can be prepared as JSON');check('Reminder data',Array.isArray(reminders)&&reminders.every(r=>r&&typeof r.text==='string'&&Number.isFinite(Number(r.time))),'saved reminder records checked');$('checkResults').textContent=results.join('\n')+'\n\nNote: browser checks cannot prove that the microphone, notification delivery, or file restore works on this phone.'};
