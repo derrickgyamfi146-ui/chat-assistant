@@ -49,9 +49,9 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 <section class="card"><h2>Personal memory</h2><p class="muted">Only information you choose to save stays on this device.</p><textarea id="memoryInput" placeholder="Example: I prefer short, clear explanations."></textarea><div class="actions"><button id="saveMemory">Save memory</button><button type="button" class="secondary" id="backupData">Back up data</button><button type="button" class="secondary" id="restoreData">Restore backup</button><input id="backupFile" type="file" accept="application/json,.json" hidden></div><div class="tiny">Back up your conversations, memories and reminders to a file you control.</div><div id="memoryList" style="margin-top:8px"></div></section>
 <section class="card"><h2>Reminders</h2><input id="reminderText" placeholder="What should I remind you about?"><input id="reminderTime" type="datetime-local"><button id="addReminder">Add reminder</button><div class="tiny" style="margin-top:8px">Reminders are checked while CHAT is open. Browser notification permission may be requested.</div><div id="reminderList" style="margin-top:8px"></div></section>
 </div>
-<section class="card"><h2>What I can do in this first version</h2><div class="muted">Try: “Remember that I prefer simple English”, “Show my memory”, “Add a reminder to study at 7 pm” (use the reminder form for an exact time), or “What can you do?”</div></section>
+<section class="card"><h2>What I can do in this first version</h2><div class="muted">Try: “Remember that I prefer simple English”, “Show my memory”, “Add a reminder to study at 7 pm” (use the reminder form for an exact time), or “What can you do?” Try “calculate 25 * 4” too.</div></section>
 </main>
-<footer>CHAT v0.1 · Your data stays in this browser on this device. This first version works locally and is not yet connected to a full AI model.</footer>
+<footer>CHAT v0.2 · Your data stays in this browser on this device. This first version works locally and is not yet connected to a full AI model.</footer>
 <script>
 const $=id=>document.getElementById(id);
 const read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
@@ -79,7 +79,7 @@ function handle(text){
  if(low.startsWith('remember ')){saveMemory(t.slice(9).trim());return}
  if(low.includes('show my memory')||low.includes('what do you remember')||low==='memory'){reply(memories.length?'Here is what I have saved:\n• '+memories.join('\n• '):'Your personal memory is empty. Use “Remember that…” or the Save memory button.');return}
  if(low.includes('show my reminders')||low.includes('list reminders')){reply(reminders.length?'Your reminders:\n• '+reminders.map(r=>r.text+' — '+new Date(r.time).toLocaleString()+(r.done?' (done)':'')).join('\n• '):'You have no saved reminders. Add one in the Reminders section.');return}
- if(low.includes('what can you do')||low==='help'||low==='commands'){reply('I can save and recall personal memories, show your reminders, tell the date and time, speak replies, and take voice input. Use the memory and reminder panels for saving details and setting exact reminder times. I work offline; I am not connected to a full AI model yet.');return}
+ if(low.includes('what can you do')||low==='help'||low==='commands'){reply('I can save and recall personal memories, show reminders, calculate arithmetic, tell the date and time, speak replies, and take voice input. Use the memory and reminder panels for saving details and setting exact reminder times. I work offline; I am not connected to a full AI model yet.');return}
  if(low.includes('who are you')||low.includes('your name')){reply('I am CHAT, your personal assistant. My style is professional, and I currently run locally on this device.');return}
  if(low.includes('hello')||low==='hi'||low.startsWith('good morning')||low.startsWith('good afternoon')||low.startsWith('good evening')){reply('Hello. I am CHAT. How may I assist you?');return}
  const calcMatch=t.match(/^(?:calculate|compute|what is)\s+(.+?)[?。]?$/i);
@@ -88,7 +88,7 @@ function handle(text){
  if(low.includes('date')||low.includes('today')){reply('Today is '+new Date().toLocaleDateString()+'.');return}
  if(low.includes('thank')){reply('You are welcome. Is there anything else I can help you organise?');return}
  if(low.includes('how are you')){reply('I am operating normally and ready to assist. What would you like to do?');return}
- reply('I have received your message. I can currently handle saved memories, reminders, date and time, and basic assistant commands. For open-ended questions, I still need an AI model connection.');}
+ reply('I have received your message. I can currently handle saved memories, reminders, date and time, arithmetic calculations, and basic assistant commands. For open-ended questions, I still need an AI model connection.');}
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();handle($('message').value);$('message').value=''});
 $('backupData').onclick=()=>{
  const data={app:'CHAT',version:1,exportedAt:new Date().toISOString(),memories,reminders,messages};
