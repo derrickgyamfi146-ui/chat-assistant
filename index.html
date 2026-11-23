@@ -63,6 +63,15 @@ function speak(text){if(!voiceOn||!('speechSynthesis'in window))return; speechSy
 function reply(text){addMsg(text);speak(text)}
 function renderMemory(){ $('memoryList').innerHTML='';memories.forEach((m,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=m;const b=document.createElement('button');b.className='secondary';b.textContent='Delete';b.onclick=()=>{memories.splice(i,1);write('chat_memories',memories);renderMemory()};d.append(s,b);$('memoryList').append(d)})}
 function renderReminders(){ $('reminderList').innerHTML='';reminders.forEach((r,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=r.text+' · '+new Date(r.time).toLocaleString();const b=document.createElement('button');b.className='secondary';b.textContent='Delete';b.onclick=()=>{reminders.splice(i,1);write('chat_reminders',reminders);renderReminders()};d.append(s,b);$('reminderList').append(d)})}
+function calculateExpression(source){
+ const tokens=source.replace(/,/g,'').match(/\\d+(?:\\.\\d+)?|[()+\\-*/]/g);
+ if(!tokens||tokens.join('')!==source.replace(/[\\s,]/g,''))throw new Error('Invalid expression');
+ let i=0;
+ function factor(){const t=tokens[i++];if(t==='+')return factor();if(t==='-')return -factor();if(t==='('){const v=expression();if(tokens[i++]!==')')throw new Error('Missing bracket');return v}if(t===undefined||!/^\\d+(?:\\.\\d+)?$/.test(t))throw new Error('Expected number');return Number(t)}
+ function term(){let v=factor();while(tokens[i]==='*'||tokens[i]==='/'){const op=tokens[i++],n=factor();if(op==='/'&&n===0)throw new Error('Division by zero');v=op==='*'?v*n:v/n}return v}
+ function expression(){let v=term();while(tokens[i]==='+'||tokens[i]==='-'){const op=tokens[i++],n=term();v=op==='+'?v+n:v-n}return v}
+ const result=expression();if(i!==tokens.length||!Number.isFinite(result))throw new Error('Invalid calculation');return result;
+}
 function handle(text){
  const t=text.trim();if(!t)return;addMsg(t,'me');const low=t.toLowerCase();
  const saveMemory=m=>{if(!m)return;memories.push(m);write('chat_memories',memories);renderMemory();reply('Saved to your personal memory: '+m)};
@@ -73,6 +82,8 @@ function handle(text){
  if(low.includes('what can you do')||low==='help'||low==='commands'){reply('I can save and recall personal memories, show your reminders, tell the date and time, speak replies, and take voice input. Use the memory and reminder panels for saving details and setting exact reminder times. I work offline; I am not connected to a full AI model yet.');return}
  if(low.includes('who are you')||low.includes('your name')){reply('I am CHAT, your personal assistant. My style is professional, and I currently run locally on this device.');return}
  if(low.includes('hello')||low==='hi'||low.startsWith('good morning')||low.startsWith('good afternoon')||low.startsWith('good evening')){reply('Hello. I am CHAT. How may I assist you?');return}
+ const calcMatch=t.match(/^(?:calculate|compute|what is)\\s+(.+?)[?。]?$/i);
+ if(calcMatch&&/[0-9][0-9\\s.,()+*/-]*$/.test(calcMatch[1])){try{reply('The answer is '+calculateExpression(calcMatch[1].trim())+'.')}catch{reply('I could not calculate that. Please use numbers and +, -, ×, ÷, or brackets.')}return}
  if(low.includes('time')){reply('The current time on your device is '+new Date().toLocaleTimeString()+'.');return}
  if(low.includes('date')||low.includes('today')){reply('Today is '+new Date().toLocaleDateString()+'.');return}
  if(low.includes('thank')){reply('You are welcome. Is there anything else I can help you organise?');return}
