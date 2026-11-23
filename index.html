@@ -50,9 +50,10 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 <section class="card"><h2>Reminders</h2><input id="reminderText" placeholder="What should I remind you about?"><input id="reminderTime" type="datetime-local"><button id="addReminder">Add reminder</button><div class="tiny" style="margin-top:8px">Reminders are checked while CHAT is open. Browser notification permission may be requested.</div><div id="reminderList" style="margin-top:8px"></div></section>
 </div>
 <section class="card" style="margin-top:12px"><h2>System check</h2><p class="muted">Check which features this browser supports. This does not send your data anywhere.</p><div class="actions"><button type="button" id="runChecks">Run system check</button><button type="button" class="secondary" id="testVoice">Test voice output</button><button type="button" class="secondary" id="testNotification">Test notification</button><button type="button" class="secondary" id="testReminder">Test reminder (10 sec)</button></div><div id="checkResults" class="muted" style="margin-top:10px" aria-live="polite">Checks have not been run yet.</div></section>
+<section class="card" style="margin-top:12px"><h2>Offline AI brain</h2><p class="muted">Optional on-device language model. First setup needs internet and downloads about 182 MB of model weights, plus supporting files. It can use more storage and memory while running. Do not start on mobile data unless you want that download.</p><div class="actions"><button type="button" id="loadAI">Download & prepare AI</button></div><div id="aiStatus" class="muted" style="margin-top:10px" aria-live="polite">Not downloaded. CHAT will keep using its built-in offline knowledge.</div><progress id="aiProgress" max="100" value="0" style="width:100%;margin-top:8px;display:none"></progress><div class="tiny">Model: SmolLM2 135M Instruct, 4-bit ONNX. Small model; answers may be limited. Model files are hosted by Hugging Face, not stored in your GitHub repository.</div></section>
 <section class="card"><h2>What I can do in this first version</h2><div class="muted">Try: “Remember that I prefer simple English”, “Show my memory”, “Clear completed reminders”, or “What can you do?” Use the Reminders form to set an exact date and time. Try “calculate 25 * 4” too.</div></section>
 </main>
-<footer>CHAT v0.9 · Your data stays in this browser on this device. Includes a small built-in offline knowledge library; not a full generative AI model.</footer>
+<footer>CHAT v1.0 · Your data stays in this browser on this device. Includes built-in offline knowledge and an optional downloadable on-device AI model.</footer>
 <script>
 const $=id=>document.getElementById(id);
 const read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
@@ -119,6 +120,7 @@ function handle(text){
  if(low.includes('thank')){reply('You are welcome. Is there anything else I can help you organise?');return}
  if(low.includes('how are you')){reply('I am operating normally and ready to assist. What would you like to do?');return}
  const knowledgeReply=offlineAnswer(t);if(knowledgeReply){reply(knowledgeReply);return}
+ if(window.chatAIReady&&typeof window.chatAIRespond==='function'){addMsg('Thinking with the on-device AI…');window.chatAIRespond(t).then(reply).catch(()=>reply('The on-device model had a problem answering. You can try again or use my built-in offline topics.'));return}
  reply('I am in offline mode. I can answer some built-in questions about science, computers, Ghana and general knowledge, as well as manage your memories, reminders and calculations. I do not know every answer yet. Try asking about gravity, photosynthesis, atoms, density or the water cycle.');}
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();handle($('message').value);$('message').value=''});
 $('chatSearch').addEventListener('input',renderChat);
