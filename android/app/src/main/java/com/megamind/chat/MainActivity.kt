@@ -14,20 +14,20 @@ import android.widget.TextView
 class MainActivity : Activity() {
     private lateinit var messages: LinearLayout
     private lateinit var input: EditText
-    private val background = Color.rgb(12, 17, 29)
-    private val panel = Color.rgb(24, 32, 49)
-    private val accent = Color.rgb(91, 157, 255)
+    private val bgColor = Color.rgb(12, 17, 29)
+    private val panelColor = Color.rgb(24, 32, 49)
+    private val accentColor = Color.rgb(91, 157, 255)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.statusBarColor = background
         window.navigationBarColor = background
-        window.decorView.setBackgroundColor(background)
+        window.decorView.setBackgroundColor(bgColor)
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(20, 24, 20, 16)
-            setBackgroundColor(background)
+            setBackgroundColor(bgColor)
         }
 
         val header = TextView(this).apply {
@@ -68,14 +68,14 @@ class MainActivity : Activity() {
             textSize = 16f
             setSingleLine(true)
             setPadding(14, 10, 14, 10)
-            setBackgroundColor(panel)
+            setBackgroundColor(panelColor)
         }
         composer.addView(input, LinearLayout.LayoutParams(0, 54, 1f))
 
         val send = Button(this).apply {
             text = "Send"
             setTextColor(Color.WHITE)
-            setBackgroundColor(accent)
+            setBackgroundColor(accentColor)
             setOnClickListener {
                 val message = input.text.toString().trim()
                 if (message.isNotEmpty()) {
